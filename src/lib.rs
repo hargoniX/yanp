@@ -1,12 +1,16 @@
 #![deny(warnings)]
-#![no_std]
-pub mod sentences;
-pub mod parse;
-pub mod errors;
+//#![no_std]
 
+#[macro_use]
+extern crate nom;
 use errors::NmeaSentenceError;
 use parse::{SentenceData, parse_sentence_data};
 use sentences::GeneralSentence;
+
+pub mod sentences;
+pub mod parse;
+pub mod errors;
+mod parsers;
 
 /// The central entrypoint for the library, it verifies and parses a given sentence
 /// into a specific data struct for the user

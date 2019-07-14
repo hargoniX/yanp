@@ -12,8 +12,6 @@ pub enum NmeaSentenceError<'a> {
     ChecksumError(u8, u8),
     /// Is thrown if parsing a raw sentence into a GeneralSentence fails
     GeneralParsingError,
-    /// Is thrown if parsing the data of a sentence into a data struct fails
-    DataParsingError,
     /// Is thrown if no parser exists for a given NMEA sentence type yet,
     /// contains the sentence type for which no parser was found
     TypeNotImplementedError(SentenceType),
@@ -23,4 +21,6 @@ pub enum NmeaSentenceError<'a> {
     /// Is thrown if the type of a sentence could not be matched against
     /// a list of already known types
     UnkownTypeError(&'a [u8]),
+    /// Is thrown if parsing the data of a sentence into a data struct fails
+    DataParsingError,
 }
