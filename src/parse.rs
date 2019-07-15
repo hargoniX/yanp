@@ -1,6 +1,6 @@
-use crate::sentences::{GeneralSentence, SentenceType};
+use crate::sentences:: {GeneralSentence, SentenceType};
 use crate::errors::NmeaSentenceError;
-use crate::parsers::*;
+use crate::parsers;
 
 macro_rules! status {
     ($($name:ident, $type:ty : [$($input:tt => $status:ident),+ error: $error:ident]),+) => {
@@ -438,7 +438,7 @@ pub struct ZfoData {}
 pub struct ZtgData {}
 
 macro_rules! sentence_parse_generator {
-    ($sentence:ident : [$($TYPE:ident => $function:ident,)+]) => {
+    ($sentence:ident : [$($TYPE:ident => $function:path,)+]) => {
         match $sentence.sentence_type {
             $(
                 SentenceType::$TYPE => Ok(SentenceData::$TYPE(parse_result_to_data($function($sentence.data))?)),
@@ -469,8 +469,8 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //APA => parse_apa,
             //APB => parse_apb,
             //BEC => parse_bec,
-            BOD => parse_bod,
-            BWC => parse_bwc,
+            BOD => parsers::bod::parse_bod,
+            BWC => parsers::bwc::parse_bwc,
             //BWR => parse_bwr,
             //BWW => parse_bww,
             //DBK => parse_dbk,
@@ -481,9 +481,9 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //DTM => parse_dtm,
             //FSI => parse_fsi,
             //GBS => parse_gbs,
-            GGA => parse_gga,
+            GGA => parsers::gga::parse_gga,
             //GLC => parse_glc,
-              //GLL => parse_gll,
+            GLL => parsers::gll::parse_gll,
             //GNS => parse_gns,
             //GRS => parse_grs,
             //GST => parse_gst,
@@ -504,7 +504,7 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
               //ROO => parse_roo,
               //RMA => parse_rma,
               //RMB => parse_rmb,
-            RMC => parse_rmc,
+            RMC => parsers::rmc::parse_rmc,
             //ROT => parse_rot,
             //RPM => parse_rpm,
             //RSA => parse_rsa,
