@@ -222,7 +222,7 @@ pub struct BwcData<'a> {
     pub bearing_true: Option<f32>,
     pub bearing_magnetic: Option<f32>,
     pub nautical_miles: Option<f32>,
-    pub waypoint: &'a str,
+    pub waypoint: Option<&'a [u8]>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BwrData {}
@@ -253,6 +253,8 @@ pub struct GgaData {
     pub hdop: Option<f32>,
     pub altitude: Option<f32>,
     pub geoid_altitude: Option<f32>,
+    pub age_of_differential: Option<f32>,
+    pub differential_station_id: Option<u16>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GlcData {}
@@ -447,12 +449,12 @@ macro_rules! sentence_parse_generator {
 }
 
 
-fn parse_result_to_data<'a, Data>(parse_result: Result<(&[u8], Data), nom::Err<(&[u8], nom::error::ErrorKind)>>) -> Result<Data, NmeaSentenceError<'a>> {
+fn parse_result_to_data<'a, Data>(parse_result: Result<(&'a [u8], Data), nom::Err<(&'a [u8], nom::error::ErrorKind)>>) -> Result<Data, NmeaSentenceError<'a>> {
     
     match parse_result {
         Ok(value) => Ok(value.1),
-        Err(_) => {
-            Err(NmeaSentenceError::DataParsingError)
+        Err(val) => {
+            Err(NmeaSentenceError::DataParsingError(val))
         }
     }
 }
@@ -468,7 +470,7 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //APB => parse_apb,
             //BEC => parse_bec,
             BOD => parse_bod,
-              //BWC => parse_bwc,
+            BWC => parse_bwc,
             //BWR => parse_bwr,
             //BWW => parse_bww,
             //DBK => parse_dbk,
@@ -479,7 +481,7 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //DTM => parse_dtm,
             //FSI => parse_fsi,
             //GBS => parse_gbs,
-              //GGA => parse_gga,
+            GGA => parse_gga,
             //GLC => parse_glc,
               //GLL => parse_gll,
             //GNS => parse_gns,
