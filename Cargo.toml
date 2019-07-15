@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Henrik Böving <hargonix@gmail.com>"]
 edition = "2018"
 
-
 [dependencies.nom]
 version = "5.0.0"
 default-features = false
