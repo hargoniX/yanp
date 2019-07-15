@@ -1,148 +1,171 @@
 use crate::sentences::{GeneralSentence, SentenceType};
 use crate::errors::NmeaSentenceError;
-use crate::parsers::parse_rmc;
+use crate::parsers::*;
+
+macro_rules! status {
+    ($($name:ident, $type:ty : [$($input:tt => $status:ident),+ error: $error:ident]),+) => {
+        #[derive(Debug, Clone, Copy, PartialEq)]
+        pub enum StatusParsingError {
+            $(
+                $error,
+            )+
+        }
+        $(  
+            #[derive(Debug, Clone, Copy, PartialEq)]
+            pub enum $name {
+                $(
+                    $status,
+                )+
+            } 
+
+            impl $name {
+                #[allow(unused)]
+                pub (crate) fn try_from<'a>(num: $type) -> Result<Self, NmeaSentenceError<'a>> {
+                    match num {
+                        $(
+                            $input => Ok($name::$status),
+                        )+
+                        _ => Err(NmeaSentenceError::StatusParsingError(StatusParsingError::$error)),
+                    }
+                }
+            }
+        )+
+    }
+}
+
+status! {
+    RmStatus, char: [
+        'A' => Active,
+        'V' => Warning,
+        'P' => Precise
+        error: RmStatusError
+    ],
+    LatitudeDirection, char: [
+        'N' => North,
+        'S' => South
+        error: LatitudeDirectionError
+    ],
+    LongitudeDirection, char: [
+        'E' => East,
+        'W' => West
+        error: LongitudeDirectionError
+    ],
+    GpsQuality, u8: [
+        0 => FixNotAvailable,
+        1 => Fix,
+        2 => DifferentialFix
+        error: GpsQualityError
+    ],
+    GllStatus, char: [
+        'A' => DataValid,
+        'V' => DataInvalid,
+        'P' => Precise
+        error: GllStatusError
+    ],
+    GsaMode, u8: [
+        1 => FixNotAvailable,
+        2 => Fix2D,
+        3 => Fix3D
+        error: GsaModeError
+    ],
+    GsaSelectionMode, char: [
+        'M' => Manual,
+        'A' => Automatic
+        error: GsaSelectionModeError
+    ],
+    SteerDirection, char: [
+        'L' => Left,
+        'R' => Right
+        error: SteerDirectionError
+    ],
+    ArrivalStatus, char: [
+        'A' => Arrived,
+        'V' => NotArrived
+        error: ArrivalStatusError
+    ],
+    RteMode, char: [
+        'c' => CompleteRoute,
+        'w' => WorkingRoute
+        error: RteModeError
+    ],
+    DataValidity, char: [
+        'A' => DataValid
+        error: DataValidityError
+    ]
+}
 
 /// An enum storing consisting of all NMEA sentence types
 /// together with their corresponding data structs
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub enum SentenceData<'a> {
-    /// AAM - Waypoint Arrival Alarm
     AAM(AamData),
-    /// ABK - UAIS Addressed and binary broadcast acknowledgement
     ABK(AbkData),
-    /// ACK - Acknowledge Alarm
     ACK(AckData),
-    /// ALM - GPS Almanac Data
     ALM(AlmData),
-    /// APA - Autopilot Sentence "A"
     APA(ApaData),
-    /// APB - Autopilot Sentence "B"
     APB(ApbData),
-    /// BEC - Bearing & Distance to Waypoint - Dead Reckoning
     BEC(BecData),
-    /// BOD - Bearing Origin to Destination
     BOD(BodData<'a>),
-    /// BWC - Bearing and Distance to Waypoint, Latitude, N/S, Longitude, E/W, UTC, Status
     BWC(BwcData<'a>),
-    /// BWR - Bearing and Distance to Waypoint - Rhumb Line, Latitude, N/S, Longitude, E/W, UTC, Status
     BWR(BwrData),
-    /// BWW - Bearing - Waypoint to Waypoint
     BWW(BwwData),
-    /// DBK - Depth Below Keel
     DBK(DbkData),
-    /// DBS - Depth Below Surface
     DBS(DbsData),
-    /// DBT - Depth below transducer
     DBT(DbtData),
-    /// DCN - Decca Position (obsolete)
     DCN(DcnData),
-    /// DPT - Depth of water
     DPT(DptData),
-    /// DTM - Datum Reference
     DTM(DtmData),
-    /// FSI - Frequency Set Information
     FSI(FsiData),
-    /// GBS - GPS Satellite Fault Detection
     GBS(GbsData),
-    /// GGA - Global Positioning System Fix Data, Time, Position and fix related data fora GPS receiver.
     GGA(GgaData),
-    /// GLC - Geographic Position, Loran-C
     GLC(GlcData),
-    /// GLL - Geographic Position - Latitude/Longitude
     GLL(GllData),
-    /// GNS - GNSS fixed data
     GNS(GnsData),
-    /// GRS - GNSS Range Residual
     GRS(GrsData),
-    /// GST - GNSS Pseudorange Error Statistics
     GST(GstData),
-    /// GSA - GPS DOP and active satellites
     GSA(GsaData),
-    /// GSV - Satellites in view
     GSV(GsvData),
-    /// GTD - Geographic Location in Time Differences
     GTD(GtdData),
-    /// GXA - TRANSIT Position - Latitude/Longitude - Location and time of TRANSIT fix at waypoint (obsolete)
     GXA(GxaData),
-    /// HDG - Heading - Deviation & Variation
     HDG(HdgData),
-    /// HDM - Heading - Magnetic
     HDM(HdmData),
-    /// HDT - Heading - True
     HDT(HdtData),
-    /// HSC - Heading Steering Command
     HSC(HscData),
-    /// LCD - Loran-C Signal Data
     LCD(LcdData),
-    /// MSK - MSK Receiver Interface (for DGPS Beacon Receivers)
     MSK(MskData),
-    /// MTW - Water Temperature
     MTW(MtwData),
-    /// MWV - Wind Speed and Angle
     MWV(MwvData),
-    /// OLN - Omega Lane Numbers (obsolete)
     OLN(OlnData),
-    /// OSD - Own Ship Data
     OSD(OsdData),
-    /// R00 - Waypoints in active route
     ROO(RooData<'a>),
-    /// RMA - Recommended Minimum Navigation Information
     RMA(RmaData),
-    /// RMB - Recommended Minimum Navigation Information
     RMB(RmbData<'a>),
-    /// RMC - Recommended Minimum Navigation Information
     RMC(RmcData),
-    /// ROT - Rate Of Turn
     ROT(RotData),
-    /// RPM - Revolutions
     RPM(RpmData),
-    /// RSA - Rudder Sensor Angle
     RSA(RsaData),
-    /// RSD - RADAR System Data
     RSD(RsdData),
-    /// RTE - Routes
     RTE(RteData<'a>),
-    /// SFI - Scanning Frequency Information
     SFI(SfiData),
-    /// STN - Multiple Data ID
     STN(StnData),
-    /// TLL - Target latitude and longitude
     TLL(TllData),
-    /// TRF - TRANSIT Fix Data (obsolete)
     TRF(TrfData),
-    /// TTM - Tracked Target Message
     TTM(TtmData),
-    /// VBW - Dual Ground/Water Speed
     VBW(VbwData),
-    /// VDR - Set and Drift
     VDR(VdrData),
-    /// VHW - Water speed and heading
     VHW(VhwData),
-    /// VLW - Distance Traveled through Water
     VLW(VlwData),
-    /// VPW - Speed - Measured Parallel to Wind
     VPW(VpwData),
-    /// VTG - Track made good and Ground speed
     VTG(VtgData),
-    /// VWR - Relative Wind Speed and Angle
     VWR(VwrData),
-    /// WCV - Waypoint Closure Velocity
     WCV(WcvData),
-    /// WNC - Distance - Waypoint to Waypoint
     WNC(WncData),
-    /// WPL - Waypoint Location
     WPL(WplData<'a>),
-    /// XDR - Transducer Measurement
     XDR(XdrData),
-    /// XTE - Cross-Track Error, Measured
     XTE(XteData),
-    /// XTR - Cross Track Error - Dead Reckoning
     XTR(XtrData),
-    /// ZDA - Time & Date - UTC, day, month, year and local time zone
     ZDA(ZdaData),
-    /// ZFO - UTC & Time from origin Waypoint
     ZFO(ZfoData),
-    /// ZTG - UTC & Time to Destination Waypoint
     ZTG(ZtgData),
 }
 
@@ -172,178 +195,6 @@ pub struct GpsDate {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
-/// Represents a status in one of the RM messages
-pub enum RmStatus {
-    Autonomous,
-    Invalid,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum LatitudeDirection {
-    North,
-    South,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum LongitudeDirection {
-    East,
-    West,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum GpsQuality {
-    FixNotAvailable,
-    Fix,
-    DifferentialFix,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum GllStatus {
-    DataValid,
-    DataInvalid,
-    Precise
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum GsaMode {
-    FixNotAvailable,
-    Fix2D,
-    Fix3D,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum GsaSelectionMode {
-    Manual,
-    Automatic,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum SteerDirection {
-    Left,
-    Right,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum ArrivalStatus {
-    Arrived,
-    NotArrived,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum RteMode {
-    CompleteRoute,
-    WorkingRoute,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub enum DataValidity {
-    DataValid,
-    DataInvalid,
-}
-
-impl LongitudeDirection {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'E' => LongitudeDirection::East,
-            _ => LongitudeDirection::West,
-        }
-    }
-}
-
-impl LatitudeDirection {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'N' => LatitudeDirection::North,
-            _ => LatitudeDirection::South,
-        }
-    }
-}
-
-impl RmStatus {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'A' => RmStatus::Autonomous,
-            _ => RmStatus::Invalid, 
-        }            
-    }
-}
-
-impl GpsQuality {
-    pub (crate) fn from_number(num: u8) -> Self {
-        match num {
-            0 => GpsQuality::FixNotAvailable,
-            1 => GpsQuality::Fix,
-            2 => GpsQuality::DifferentialFix,
-        }
-    }
-}
-
-impl GllStatus {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'A' => GllStatus::DataValid,
-            'V' => GllStatus::DataInvalid,
-            'P' => GllStatus::Precise,
-        }
-    }
-}
-
-impl GsaMode {
-    pub (crate) fn from_number(num: u8) -> Self {
-        match num {
-            1 => GsaMode::FixNotAvailable,
-            2 => GsaMode::Fix2D,
-            3 => GsaMode::Fix3D,
-        }
-    }
-}
-
-impl GsaSelectionMode {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'M' => GsaSelectionMode::Manual,
-            'A' => GsaSelectionMode::Automatic,
-        }
-    }
-}
-
-impl SteerDirection {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'L' => SteerDirection::Left,
-            _ => SteerDirection::Right,
-        }
-    }
-}
-
-impl ArrivalStatus {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'A' => ArrivalStatus::Arrived,
-            _ => ArrivalStatus::NotArrived,
-        }
-    }
-}
-
-impl RteMode {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'c' => RteMode::CompleteRoute,
-            'w' => RteMode::WorkingRoute,
-        }
-    }
-}
-
-impl DataValidity {
-    pub (crate) fn from_char(chr: char) -> Self {
-        match chr {
-            'A' => DataValidity::DataValid,
-            _ => DataValidity::DataInvalid,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AamData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AbkData {}
@@ -361,8 +212,8 @@ pub struct BecData {}
 pub struct BodData<'a> {
     pub bearing_true: Option<f32>,
     pub bearing_magnetic: Option<f32>,
-    pub to_waypoint: &'a str,
-    pub from_waypoint: &'a str,
+    pub to_waypoint: Option<&'a [u8]>,
+    pub from_waypoint: Option<&'a [u8]>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct BwcData<'a> {
@@ -584,23 +435,6 @@ pub struct ZfoData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ZtgData {}
 
-macro_rules! prefix_match_generator {
-    ($prefix:ident, $data:ident, $checksum:ident: [$($type_literal:tt => $STYPE:ident,)+]) => {
-        match &$prefix[3..6] {
-            $(
-                $type_literal => Ok(GeneralSentence {
-                                        sentence_type: SentenceType::$STYPE,
-                                        data: $data,
-                                        checksum: $checksum,
-                                        prefix: $prefix
-                                    }
-                                 ),
-            )+
-            _ => Err(NmeaSentenceError::UnkownTypeError($prefix)),
-        }
-    };
-}
-
 macro_rules! sentence_parse_generator {
     ($sentence:ident : [$($TYPE:ident => $function:ident,)+]) => {
         match $sentence.sentence_type {
@@ -612,89 +446,6 @@ macro_rules! sentence_parse_generator {
     }
 }
 
-fn parse_hex(data: &[u8]) ->Result<u8, NmeaSentenceError> {
-    u8::from_str_radix(unsafe {core::str::from_utf8_unchecked(data)}, 16)
-        .map_err(|_| NmeaSentenceError::HexParsingError(data[0], data[1]))
-}
-
-pub (crate) fn parse_general_sentence(sentence: &[u8]) -> Result<GeneralSentence, NmeaSentenceError> {
-    
-    let (prefix, rest) = sentence.split_at(7);
-    let (data, checksum) = rest.split_at(rest.len() - 5);
-    let checksum = parse_hex(&checksum[1..3])?;
-
-    prefix_match_generator!(prefix, data, checksum: [
-        b"AAM" => AAM,
-        b"ABK" => ABK,
-        b"ACK" => ACK,
-        b"ALM" => ALM,
-        b"APA" => APA,
-        b"APB" => APB,
-        b"BEC" => BEC,
-        b"BOD" => BOD,
-        b"BWC" => BWC,
-        b"BWR" => BWR,
-        b"BWW" => BWW,
-        b"DBK" => DBK,
-        b"DBS" => DBS,
-        b"DBT" => DBT,
-        b"DCN" => DCN,
-        b"DPT" => DPT,
-        b"DTM" => DTM,
-        b"FSI" => FSI,
-        b"GBS" => GBS,
-        b"GGA" => GGA,
-        b"GLC" => GLC,
-        b"GLL" => GLL,
-        b"GNS" => GNS,
-        b"GRS" => GRS,
-        b"GST" => GST,
-        b"GSA" => GSA,
-        b"GSV" => GSV,
-        b"GTD" => GTD,
-        b"GXA" => GXA,
-        b"HDG" => HDG,
-        b"HDM" => HDM,
-        b"HDT" => HDT,
-        b"HSC" => HSC,
-        b"LCD" => LCD,
-        b"MSK" => MSK,
-        b"MTW" => MTW,
-        b"MWV" => MWV,
-        b"OLN" => OLN,
-        b"OSD" => OSD,
-        b"ROO" => ROO,
-        b"RMA" => RMA,
-        b"RMB" => RMB,
-        b"RMC" => RMC,
-        b"ROT" => ROT,
-        b"RPM" => RPM,
-        b"RSA" => RSA,
-        b"RSD" => RSD,
-        b"RTE" => RTE,
-        b"SFI" => SFI,
-        b"STN" => STN,
-        b"TLL" => TLL,
-        b"TRF" => TRF,
-        b"TTM" => TTM,
-        b"VBW" => VBW,
-        b"VDR" => VDR,
-        b"VHW" => VHW,
-        b"VLW" => VLW,
-        b"VPW" => VPW,
-        b"VTG" => VTG,
-        b"VWR" => VWR,
-        b"WCV" => WCV,
-        b"WNC" => WNC,
-        b"WPL" => WPL,
-        b"XDR" => XDR,
-        b"XTE" => XTE,
-        b"XTR" => XTR,
-        b"ZDA" => ZDA,
-        b"ZFO" => ZFO,
-        b"ZTG" => ZTG,
-    ])
-}
 
 fn parse_result_to_data<'a, Data>(parse_result: Result<(&[u8], Data), nom::Err<(&[u8], nom::error::ErrorKind)>>) -> Result<Data, NmeaSentenceError<'a>> {
     
@@ -717,7 +468,7 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //APB => parse_apb,
             //BEC => parse_bec,
             BOD => parse_bod,
-            BWC => parse_bwc,
+              //BWC => parse_bwc,
             //BWR => parse_bwr,
             //BWW => parse_bww,
             //DBK => parse_dbk,
@@ -728,19 +479,19 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //DTM => parse_dtm,
             //FSI => parse_fsi,
             //GBS => parse_gbs,
-            GGA => parse_gga,
+              //GGA => parse_gga,
             //GLC => parse_glc,
-            GLL => parse_gll,
+              //GLL => parse_gll,
             //GNS => parse_gns,
             //GRS => parse_grs,
             //GST => parse_gst,
-            GSA => parse_gsa,
-            GSV => parse_gsv,
+             //GSA => parse_gsa,
+             //GSV => parse_gsv,
             //GTD => parse_gtd,
             //GXA => parse_gxa,
             //HDG => parse_hdg,
             //HDM => parse_hdm,
-            HDT => parse_hdt,
+             //HDT => parse_hdt,
             //HSC => parse_hsc,
             //LCD => parse_lcd,
             //MSK => parse_msk,
@@ -748,34 +499,34 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //MWV => parse_mwv,
             //OLN => parse_oln,
             //OSD => parse_osd,
-            ROO => parse_roo,
-            RMA => parse_rma,
-            RMB => parse_rmb,
+              //ROO => parse_roo,
+              //RMA => parse_rma,
+              //RMB => parse_rmb,
             RMC => parse_rmc,
             //ROT => parse_rot,
             //RPM => parse_rpm,
             //RSA => parse_rsa,
             //RSD => parse_rsd,
-            RTE => parse_rte,
+              //RTE => parse_rte,
             //SFI => parse_sfi,
-            STN => parse_stn,
+              //STN => parse_stn,
             //TLL => parse_tll,
-            TRF => parse_trf,
+              //TRF => parse_trf,
             //TTM => parse_ttm,
-            VBW => parse_vbw,
+              //VBW => parse_vbw,
             //VDR => parse_vdr,
             //VHW => parse_vhw,
             //VLW => parse_vlw,
             //VPW => parse_vpw,
-            VTG => parse_vtg,
+              //VTG => parse_vtg,
             //VWR => parse_vwr,
             //WCV => parse_wcv,
             //WNC => parse_wnc,
-            WPL => parse_wpl,
+              //WPL => parse_wpl,
             //XDR => parse_xdr,
             //XTE => parse_xte,
             //XTR => parse_xtr,
-            ZDA => parse_zda,
+              //ZDA => parse_zda,
             //ZFO => parse_zfo,
             //ZTG => parse_ztg,
         ]

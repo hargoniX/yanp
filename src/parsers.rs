@@ -1,7 +1,7 @@
 use crate::parse::*;
 use crate::errors::NmeaSentenceError;
 
-use nom::{one_of, named, map_res};
+use nom::{one_of, named, map_res, tag};
 
 fn parse_num<I: core::str::FromStr>(data: &[u8]) -> Result<I, NmeaSentenceError> {
     str::parse::<I>(unsafe { core::str::from_utf8_unchecked(data) }).map_err(|_| NmeaSentenceError::GeneralParsingError)
@@ -61,13 +61,57 @@ named!(parse_gps_position<GpsPosition>,
         | position: (u8, f32, char, u8, f32, char) | -> Result<GpsPosition, NmeaSentenceError>{
             Ok(GpsPosition{
                 lat: (position.0 as f32) + position.1 / 60.,
-                lat_dir: LatitudeDirection::from_char(position.2),
+                lat_dir: LatitudeDirection::try_from(position.2)?,
                 lon: (position.3 as f32) + position.4 / 60.,
-                lon_dir: LongitudeDirection::from_char(position.5),
+                lon_dir: LongitudeDirection::try_from(position.5)?,
             })
         }
     )
 );
+
+fn build_bod<'a>(sentence: (Option<f32>, Option<f32>, Option<&'a [u8]>, Option<&'a [u8]>)) -> Result<BodData<'a>, NmeaSentenceError<'a>> {
+    Ok(BodData{
+        bearing_true: sentence.0,
+        bearing_magnetic: sentence.1,
+        to_waypoint: sentence.2,
+        from_waypoint: sentence.3,
+    })
+}
+
+named!(pub (crate) parse_bod<BodData>,
+    map_res!(
+        do_parse!(
+            bearing_true: opt!(map_res!(take_until!(","), parse_num::<f32>)) >>
+            tag!(",T,") >>
+            bearing_magnetic: opt!(map_res!(take_until!(","), parse_num::<f32>)) >>
+            tag!(",M,") >>
+            to_waypoint: opt!(take_until!(",")) >>
+            char!(',') >>
+            from_waypoint: opt!(take_until!("*")) >>
+            (bearing_true, bearing_magnetic, to_waypoint, from_waypoint)
+        ),
+        build_bod
+    )
+);
+
+fn build_rmc<'a>(sentence: (Option<GpsTime>, Option<char>, GpsPosition, Option<f32>, Option<f32>, Option<GpsDate>, Option<f32>, Option<char>)) -> Result<RmcData, NmeaSentenceError<'a>> {
+    Ok(RmcData{
+        time: sentence.0,
+        status: match sentence.1 {
+            Some(status) => Some(RmStatus::try_from(status)?),
+            None => None
+        },
+        position: sentence.2,
+        speed: sentence.3,
+        heading: sentence.4,
+        date: sentence.5,
+        magnetic_variation: sentence.6,
+        magnetic_direction: match sentence.7 {
+            Some(direction) => Some(LongitudeDirection::try_from(direction)?),
+            None => None
+        }
+    })
+}
 
 named!(pub (crate) parse_rmc<RmcData>, 
     map_res!(
@@ -87,19 +131,9 @@ named!(pub (crate) parse_rmc<RmcData>,
             magnetic_variation: opt!(map_res!(take_until!(","), parse_num::<f32>)) >>
             char!(',') >>
             magnetic_direction: opt!(one_of!("EW")) >>
+            char!('*') >>
             (time, status, position, speed, heading, date, magnetic_variation, magnetic_direction)
         ),
-        |sentence: (Option<GpsTime>, Option<char>, GpsPosition, Option<f32>, Option<f32>, Option<GpsDate>, Option<f32>, Option<char>)| -> Result<RmcData, NmeaSentenceError> {
-            Ok(RmcData{
-                time: sentence.0,
-                status: sentence.1.map(|status| {RmStatus::from_char(status)}),
-                position: sentence.2,
-                speed: sentence.3,
-                heading: sentence.4,
-                date: sentence.5,
-                magnetic_variation: sentence.6,
-                magnetic_direction: sentence.7.map(|dir| LongitudeDirection::from_char(dir)),
-            })
-        }
+        build_rmc
     )
 );
