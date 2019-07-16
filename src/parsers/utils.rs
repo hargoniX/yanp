@@ -76,3 +76,13 @@ named!(pub (crate) parse_gps_position<GpsPosition>,
         }
     )
 );
+
+pub (crate) fn invalid_height_check<'a>(height: Option<&'a [u8]>) -> Result<Option<f32>, NmeaSentenceError> {
+    Ok(match height {
+        Some(val) => match val {
+            b"-" => None,
+            val => Some(parse_num::<f32>(val)?)
+        },
+        None => None
+    })
+}

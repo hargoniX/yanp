@@ -145,11 +145,10 @@ pub enum SentenceData<'a> {
     RPM(RpmData),
     RSA(RsaData),
     RSD(RsdData),
-    RTE(RteData<'a>),
+    RTE(RteData),
     SFI(SfiData),
     STN(StnData),
     TLL(TllData),
-    TRF(TrfData),
     TTM(TtmData),
     VBW(VbwData),
     VDR(VdrData),
@@ -354,12 +353,7 @@ pub struct RsaData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RsdData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct RteData<'a> {
-    pub amount_messages: Option<u8>,
-    pub sentence_number: Option<u8>,
-    pub message_mode: Option<RteMode>,
-    pub waypoints: &'a [&'a str],
-}
+pub struct RteData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct SfiData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -368,18 +362,6 @@ pub struct StnData {
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TllData {}
-#[derive(Debug, Clone, Copy, PartialEq)]
-pub struct TrfData {
-    pub time: Option<GpsTime>,
-    pub date: Option<GpsDate>,
-    pub position: Option<GpsPosition>,
-    pub elevation: Option<f32>,
-    pub iterations: Option<u8>,
-    pub doppler_intervals: Option<u8>,
-    pub update_distance: Option<u8>,
-    pub satellite_id: Option<u8>,
-    pub validity: Option<DataValidity>,
-}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct TtmData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -415,7 +397,7 @@ pub struct WncData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct WplData<'a> {
     pub position: Option<GpsPosition>,
-    pub waypoint_name: Option<&'a str>,
+    pub waypoint_name: Option<&'a [u8]>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct XdrData {}
@@ -424,12 +406,7 @@ pub struct XteData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct XtrData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct ZdaData {
-   pub utc_time: Option<GpsTime>,
-   pub utc_date: Option<GpsDate>,
-   pub hour_offset: Option<u8>,
-   pub minute_offset: Option<u8>,
-}
+pub struct ZdaData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct ZfoData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -499,7 +476,7 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //MWV => parse_mwv,
             //OLN => parse_oln,
             //OSD => parse_osd,
-              //ROO => parse_roo,
+            //ROO => parse_roo,
             RMA => parsers::rma::parse_rma,
             RMB => parsers::rmb::parse_rmb,
             RMC => parsers::rmc::parse_rmc,
@@ -507,26 +484,25 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //RPM => parse_rpm,
             //RSA => parse_rsa,
             //RSD => parse_rsd,
-              //RTE => parse_rte,
+            //RTE => parse_rte,
             //SFI => parse_sfi,
-              //STN => parse_stn,
+            STN => parsers::stn::parse_stn,
             //TLL => parse_tll,
-              //TRF => parse_trf,
             //TTM => parse_ttm,
-              //VBW => parse_vbw,
+            VBW => parsers::vbw::parse_vbw,
             //VDR => parse_vdr,
             //VHW => parse_vhw,
             //VLW => parse_vlw,
             //VPW => parse_vpw,
-              //VTG => parse_vtg,
+            VTG => parsers::vtg::parse_vtg,
             //VWR => parse_vwr,
             //WCV => parse_wcv,
             //WNC => parse_wnc,
-              //WPL => parse_wpl,
+            WPL => parsers::wpl::parse_wpl,
             //XDR => parse_xdr,
             //XTE => parse_xte,
             //XTR => parse_xtr,
-              //ZDA => parse_zda,
+            //ZDA => parse_zda,
             //ZFO => parse_zfo,
             //ZTG => parse_ztg,
         ]

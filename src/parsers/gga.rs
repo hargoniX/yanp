@@ -11,13 +11,7 @@ fn build_gga<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<u8>, Option<u8>
         sats_in_view: sentence.3,
         hdop: sentence.4,
         altitude: sentence.5,
-        geoid_altitude: match sentence.6 {
-            Some(val) => match val {
-                b"-" => None,
-                val => Some(parse_num::<f32>(val)?)
-            },
-            None => None
-        },
+        geoid_altitude: invalid_height_check(sentence.6)?,
         age_of_differential: sentence.7,
         differential_station_id: sentence.8,
     })

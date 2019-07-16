@@ -84,7 +84,6 @@ general_sentences!(
     b"SFI" => SFI,
     b"STN" => STN,
     b"TLL" => TLL,
-    b"TRF" => TRF,
     b"TTM" => TTM,
     b"VBW" => VBW,
     b"VDR" => VDR,
