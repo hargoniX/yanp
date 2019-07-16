@@ -137,7 +137,7 @@ pub enum SentenceData<'a> {
     MWV(MwvData),
     OLN(OlnData),
     OSD(OsdData),
-    ROO(RooData<'a>),
+    ROO(RooData),
     RMA(RmaData),
     RMB(RmbData<'a>),
     RMC(RmcData),
@@ -280,9 +280,9 @@ pub struct GsaData {
     pub vdop: Option<f32>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct GsvData {}
-#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GtdData {}
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub struct GsvData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GxaData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -308,9 +308,7 @@ pub struct OlnData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct OsdData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct RooData<'a> {
-    pub waypoints: &'a [&'a str],
-}
+pub struct RooData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RmaData {
     pub status: Option<RmStatus>,
@@ -325,10 +323,10 @@ pub struct RmaData {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct RmbData<'a> {
     pub status: Option<RmStatus>,
-    pub cross_error: Option<u8>,
+    pub cross_error: Option<f32>,
     pub steer_direction: Option<SteerDirection>,
-    pub from_waypoint: Option<&'a str>,
-    pub to_waypoint: Option<&'a str>,
+    pub to_waypoint: Option<&'a [u8]>,
+    pub from_waypoint: Option<&'a [u8]>,
     pub dest_position: GpsPosition,
     pub range_to_dest: Option<f32>,
     pub bearing: Option<f32>,
@@ -460,6 +458,7 @@ fn parse_result_to_data<'a, Data>(parse_result: Result<(&'a [u8], Data), nom::Er
 }
 
 pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) -> Result<SentenceData, NmeaSentenceError<'a>> {
+    
     sentence_parse_generator!(
         general_sentence: [
             //AAM => parse_aam,
@@ -487,13 +486,12 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //GNS => parse_gns,
             //GRS => parse_grs,
             //GST => parse_gst,
-             //GSA => parse_gsa,
-             //GSV => parse_gsv,
+            GSA => parsers::gsa::parse_gsa,
             //GTD => parse_gtd,
             //GXA => parse_gxa,
             //HDG => parse_hdg,
             //HDM => parse_hdm,
-             //HDT => parse_hdt,
+            HDT => parsers::hdt::parse_hdt,
             //HSC => parse_hsc,
             //LCD => parse_lcd,
             //MSK => parse_msk,
@@ -502,8 +500,8 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //OLN => parse_oln,
             //OSD => parse_osd,
               //ROO => parse_roo,
-              //RMA => parse_rma,
-              //RMB => parse_rmb,
+            RMA => parsers::rma::parse_rma,
+            RMB => parsers::rmb::parse_rmb,
             RMC => parsers::rmc::parse_rmc,
             //ROT => parse_rot,
             //RPM => parse_rpm,
