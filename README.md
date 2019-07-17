@@ -4,9 +4,12 @@ A no_std Rust NMEA 0183 sentence parser.
 ## Currently supported Sentences:
 * BOD
 * BWC
+* GBS
 * GGA
 * GLL
 * GSA
+* GNS
+* GSV
 * HDT
 * RMA
 * RMB
