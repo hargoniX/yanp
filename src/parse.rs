@@ -91,12 +91,24 @@ status! {
     DataValidity, char: [
         'A' => DataValid
         error: DataValidityError
+    ],
+    GnsMode, char: [
+        'N' => NoFix,
+        'A' => AutonomousFix,
+        'D' => DifferentialFix,
+        'P' => Precise,
+        'R' => RealTime,
+        'F' => FloatRTK,
+        'E' => Estimated,
+        'M' => Manual,
+        'S' => Simulator
+        error: GnsModeError
     ]
 }
 
 /// An enum storing consisting of all NMEA sentence types
 /// together with their corresponding data structs
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, PartialEq)]
 pub enum SentenceData<'a> {
     AAM(AamData),
     ABK(AbkData),
@@ -194,6 +206,15 @@ pub struct GpsDate {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq)]
+/// Represents a GSV satellite
+pub struct GsvSatellite {
+    pub sat_id: Option<u8>,
+    pub elevation: Option<f32>,
+    pub true_azimuth: Option<f32>,
+    pub snr: Option<u8>,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AamData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct AbkData {}
@@ -242,7 +263,16 @@ pub struct DtmData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct FsiData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct GbsData {}
+pub struct GbsData {
+    pub time: Option<GpsTime>,
+    pub lat_error: Option<f32>,
+    pub lon_error: Option<f32>,
+    pub alt_error: Option<f32>,
+    pub most_likely_failed_sat: Option<u8>,
+    pub missed_probability: Option<f32>,
+    pub bias_estimate: Option<f32>,
+    pub bias_standard_deviation: Option<f32>,
+}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GgaData {
     pub time: Option<GpsTime>,
@@ -263,8 +293,24 @@ pub struct GllData {
     pub time: Option<GpsTime>,
     pub status: Option<GllStatus>,
 }
+#[cfg(feature = "alloc")]
+#[derive(Debug, Clone, PartialEq)]
+pub struct GnsData {
+    pub time: Option<GpsTime>,
+    pub position: GpsPosition,
+    pub mode: Option<alloc::vec::Vec<GnsMode>>,
+    pub sats_in_use: Option<u8>,
+    pub hdop: Option<f32>,
+    pub orthometric_height: Option<f32>,
+    pub geoid_seperation: Option<f32>,
+    pub age_of_differential: Option<f32>,
+    pub differential_station_id: Option<u16>,
+}
+
+#[cfg(not(feature = "alloc"))]
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GnsData {}
+
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GrsData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -281,7 +327,12 @@ pub struct GsaData {
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GtdData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct GsvData {}
+pub struct GsvData {
+    pub number_of_sentences: Option<u16>,
+    pub sentence_num: Option<u16>,
+    pub sats_in_view: Option<u8>,
+    pub sats_info: [Option<GsvSatellite>; 4],
+}
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct GxaData {}
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -456,14 +507,15 @@ pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) ->
             //DPT => parse_dpt,
             //DTM => parse_dtm,
             //FSI => parse_fsi,
-            //GBS => parse_gbs,
+            GBS => parsers::gbs::parse_gbs,
             GGA => parsers::gga::parse_gga,
             //GLC => parse_glc,
             GLL => parsers::gll::parse_gll,
-            //GNS => parse_gns,
+            GNS => parsers::gns::parse_gns,
             //GRS => parse_grs,
             //GST => parse_gst,
             GSA => parsers::gsa::parse_gsa,
+            GSV => parsers::gsv::parse_gsv,
             //GTD => parse_gtd,
             //GXA => parse_gxa,
             //HDG => parse_hdg,

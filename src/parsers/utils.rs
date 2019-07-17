@@ -1,5 +1,5 @@
 use crate::parse::*;
-use nom::{one_of, named, map_res};
+pub(crate) use nom::{one_of, named, map_res, tag, take, take_until, opt};
 use crate::errors::NmeaSentenceError;
 
 pub (crate) fn parse_num<I: core::str::FromStr>(data: &[u8]) -> Result<I, NmeaSentenceError> {

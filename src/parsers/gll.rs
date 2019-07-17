@@ -1,5 +1,4 @@
 use crate::parse::*;
-use nom::{named, map_res};
 use crate::errors::NmeaSentenceError;
 use super::utils::*;
 

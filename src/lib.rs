@@ -6,6 +6,8 @@ extern crate nom;
 use errors::NmeaSentenceError;
 use parse::{SentenceData, parse_sentence_data};
 use sentences::GeneralSentence;
+#[cfg(feature = "alloc")]
+extern crate alloc;
 
 pub mod sentences;
 pub mod parse;
