@@ -1,9 +1,21 @@
-use crate::parse::*;
 use super::utils::*;
 use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
 #[cfg(feature = "alloc")]
-fn build_gns<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<&'a [u8]>, Option<u8>, Option<f32>, Option<f32>, Option<&'a [u8]>, Option<f32>, Option<u16>)) -> Result<GnsData, NmeaSentenceError<'a>> {
+fn build_gns<'a>(
+    sentence: (
+        Option<GpsTime>,
+        GpsPosition,
+        Option<&'a [u8]>,
+        Option<u8>,
+        Option<f32>,
+        Option<f32>,
+        Option<&'a [u8]>,
+        Option<f32>,
+        Option<u16>,
+    ),
+) -> Result<GnsData, NmeaSentenceError<'a>> {
     let mode = match sentence.2 {
         Some(value) => {
             let mut modes = alloc::vec::Vec::new();
@@ -12,7 +24,7 @@ fn build_gns<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<&'a [u8]>, Opti
             }
             Some(modes)
         }
-        None => None, 
+        None => None,
     };
 
     Ok(GnsData {
@@ -30,11 +42,24 @@ fn build_gns<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<&'a [u8]>, Opti
 
 #[cfg(not(feature = "alloc"))]
 #[allow(unused)]
-fn build_gns<'a>(_sentence: (Option<GpsTime>, GpsPosition, Option<&'a [u8]>, Option<u8>, Option<f32>, Option<f32>, Option<&'a [u8]>, Option<f32>, Option<u16>)) -> Result<GnsData, NmeaSentenceError<'a>> {
+fn build_gns<'a>(
+    _sentence: (
+        Option<GpsTime>,
+        GpsPosition,
+        Option<&'a [u8]>,
+        Option<u8>,
+        Option<f32>,
+        Option<f32>,
+        Option<&'a [u8]>,
+        Option<f32>,
+        Option<u16>,
+    ),
+) -> Result<GnsData, NmeaSentenceError<'a>> {
     use crate::sentences::SentenceType;
-    Err(NmeaSentenceError::TypeNotImplementedError(SentenceType::GNS))
+    Err(NmeaSentenceError::TypeNotImplementedError(
+        SentenceType::GNS,
+    ))
 }
-
 
 named!(pub (crate) parse_gns<GnsData>,
     map_res!(

@@ -1,18 +1,19 @@
-use crate::parse::*;
-pub(crate) use nom::{one_of, named, map_res, tag, take, take_until, opt};
 use crate::errors::NmeaSentenceError;
+use crate::parse::*;
+pub(crate) use nom::{map_res, named, one_of, opt, tag, take, take_until};
 
-pub (crate) fn parse_num<I: core::str::FromStr>(data: &[u8]) -> Result<I, NmeaSentenceError> {
-    str::parse::<I>(unsafe { core::str::from_utf8_unchecked(data) }).map_err(|_| NmeaSentenceError::GeneralParsingError)
+pub(crate) fn parse_num<I: core::str::FromStr>(data: &[u8]) -> Result<I, NmeaSentenceError> {
+    str::parse::<I>(unsafe { core::str::from_utf8_unchecked(data) })
+        .map_err(|_| NmeaSentenceError::GeneralParsingError)
 }
 
 macro_rules! translate_option {
     ($input:expr, $status:ident) => {
         match $input {
             Some(value) => Some($status::try_from(value)?),
-            None => None
+            None => None,
         }
-    }
+    };
 }
 
 named!(pub (crate) parse_utc_stamp<GpsTime>,
@@ -24,7 +25,6 @@ named!(pub (crate) parse_utc_stamp<GpsTime>,
             (hour, minute, second)
         ),
         |timestamp: (u8, u8, f32)| -> Result<GpsTime, NmeaSentenceError>{
-            
             Ok(GpsTime{
                 hour: timestamp.0,
                 minute: timestamp.1,
@@ -34,7 +34,7 @@ named!(pub (crate) parse_utc_stamp<GpsTime>,
     )
 );
 
-named!(pub (crate) parse_date<GpsDate>, 
+named!(pub (crate) parse_date<GpsDate>,
     map_res!(
         do_parse!(
             day: map_res!(take!(2), parse_num::<u8>) >>
@@ -77,12 +77,14 @@ named!(pub (crate) parse_gps_position<GpsPosition>,
     )
 );
 
-pub (crate) fn invalid_height_check<'a>(height: Option<&'a [u8]>) -> Result<Option<f32>, NmeaSentenceError> {
+pub(crate) fn invalid_height_check<'a>(
+    height: Option<&'a [u8]>,
+) -> Result<Option<f32>, NmeaSentenceError> {
     Ok(match height {
         Some(val) => match val {
             b"-" => None,
-            val => Some(parse_num::<f32>(val)?)
+            val => Some(parse_num::<f32>(val)?),
         },
-        None => None
+        None => None,
     })
 }

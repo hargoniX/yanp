@@ -1,6 +1,6 @@
-use crate::parse::*;
 use super::utils::*;
 use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 use nom::alt;
 
 named!(parse_gsv_sat<GsvSatellite>,
@@ -27,7 +27,17 @@ named!(parse_gsv_sat<GsvSatellite>,
     )
 );
 
-fn build_gsv<'a>(sentence: (Option<u16>, Option<u16>, Option<u8>, Option<GsvSatellite>, Option<GsvSatellite>, Option<GsvSatellite>, Option<GsvSatellite>)) -> Result<GsvData, NmeaSentenceError<'a>> {
+fn build_gsv<'a>(
+    sentence: (
+        Option<u16>,
+        Option<u16>,
+        Option<u8>,
+        Option<GsvSatellite>,
+        Option<GsvSatellite>,
+        Option<GsvSatellite>,
+        Option<GsvSatellite>,
+    ),
+) -> Result<GsvData, NmeaSentenceError<'a>> {
     Ok(GsvData {
         number_of_sentences: sentence.0,
         sentence_num: sentence.1,
@@ -35,7 +45,6 @@ fn build_gsv<'a>(sentence: (Option<u16>, Option<u16>, Option<u8>, Option<GsvSate
         sats_info: [sentence.3, sentence.4, sentence.5, sentence.6],
     })
 }
-
 
 named!(pub (crate) parse_gsv<GsvData>,
     map_res!(

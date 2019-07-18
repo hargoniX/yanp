@@ -1,6 +1,6 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
 named!(pub (crate) parse_vtg<VtgData>,
     map_res!(

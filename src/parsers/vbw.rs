@@ -1,10 +1,17 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-
-
-fn build_vbw<'a>(sentence: (Option<&'a [u8]>, Option<&'a [u8]>, Option<char>, Option<&'a [u8]>, Option<&'a [u8]>, Option<char>)) -> Result<VbwData, NmeaSentenceError> {
+fn build_vbw<'a>(
+    sentence: (
+        Option<&'a [u8]>,
+        Option<&'a [u8]>,
+        Option<char>,
+        Option<&'a [u8]>,
+        Option<&'a [u8]>,
+        Option<char>,
+    ),
+) -> Result<VbwData, NmeaSentenceError> {
     Ok(VbwData {
         lon_water_speed: invalid_height_check(sentence.0)?,
         transverse_water_speed: invalid_height_check(sentence.1)?,

@@ -1,12 +1,14 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_gll<'a>(sentence: (GpsPosition, Option<GpsTime>, Option<char>)) -> Result<GllData, NmeaSentenceError<'a>> {
-    Ok(GllData{
+fn build_gll<'a>(
+    sentence: (GpsPosition, Option<GpsTime>, Option<char>),
+) -> Result<GllData, NmeaSentenceError<'a>> {
+    Ok(GllData {
         position: sentence.0,
         time: sentence.1,
-        status: translate_option!(sentence.2, GllStatus)
+        status: translate_option!(sentence.2, GllStatus),
     })
 }
 

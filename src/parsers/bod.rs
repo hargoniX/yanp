@@ -1,9 +1,11 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_bod<'a>(sentence: (Option<f32>, Option<f32>, Option<&'a [u8]>, Option<&'a [u8]>)) -> Result<BodData<'a>, NmeaSentenceError<'a>> {
-    Ok(BodData{
+fn build_bod<'a>(
+    sentence: (Option<f32>, Option<f32>, Option<&'a [u8]>, Option<&'a [u8]>),
+) -> Result<BodData<'a>, NmeaSentenceError<'a>> {
+    Ok(BodData {
         bearing_true: sentence.0,
         bearing_magnetic: sentence.1,
         to_waypoint: sentence.2,

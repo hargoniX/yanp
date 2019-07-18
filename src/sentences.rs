@@ -1,4 +1,4 @@
- use crate::errors::NmeaSentenceError;
+use crate::errors::NmeaSentenceError;
 
 macro_rules! general_sentences {
     ($($string_type:tt => $STYPE:ident),+) => {
@@ -103,22 +103,22 @@ general_sentences!(
     b"ZTG" => ZTG
 );
 
-fn parse_hex(data: &[u8]) ->Result<u8, NmeaSentenceError> {
-    u8::from_str_radix(unsafe {core::str::from_utf8_unchecked(data)}, 16)
+fn parse_hex(data: &[u8]) -> Result<u8, NmeaSentenceError> {
+    u8::from_str_radix(unsafe { core::str::from_utf8_unchecked(data) }, 16)
         .map_err(|_| NmeaSentenceError::HexParsingError(data[0], data[1]))
 }
 
 #[derive(Debug, Clone, Copy)]
-pub (crate) struct GeneralSentence<'a> {
-    pub (crate) sentence_type: SentenceType,
-    pub (crate) data: &'a [u8],
-    pub (crate) checksum: u8,
-    pub (crate) prefix: &'a [u8],
+pub(crate) struct GeneralSentence<'a> {
+    pub(crate) sentence_type: SentenceType,
+    pub(crate) data: &'a [u8],
+    pub(crate) checksum: u8,
+    pub(crate) prefix: &'a [u8],
 }
 
 impl<'a> GeneralSentence<'a> {
     /// Generates a new GeneralSentence instance with verified checksum
-    pub (crate) fn new(sentence: &'a [u8]) -> Result<Self, NmeaSentenceError> {
+    pub(crate) fn new(sentence: &'a [u8]) -> Result<Self, NmeaSentenceError> {
         if sentence.len() > 102 {
             return Err(NmeaSentenceError::SentenceLengthError(sentence.len()));
         }
@@ -127,7 +127,10 @@ impl<'a> GeneralSentence<'a> {
         let calculated_checksum = parsed_sentence.calc_checksum();
 
         if calculated_checksum != parsed_sentence.checksum {
-            return Err(NmeaSentenceError::ChecksumError(parsed_sentence.checksum, calculated_checksum));
+            return Err(NmeaSentenceError::ChecksumError(
+                parsed_sentence.checksum,
+                calculated_checksum,
+            ));
         }
 
         Ok(parsed_sentence)

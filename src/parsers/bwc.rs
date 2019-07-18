@@ -1,9 +1,18 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_bwc<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<f32>, Option<f32>, Option<f32>, Option<&'a [u8]>)) -> Result<BwcData<'a>, NmeaSentenceError<'a>> {
-    Ok(BwcData{
+fn build_bwc<'a>(
+    sentence: (
+        Option<GpsTime>,
+        GpsPosition,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<&'a [u8]>,
+    ),
+) -> Result<BwcData<'a>, NmeaSentenceError<'a>> {
+    Ok(BwcData {
         time: sentence.0,
         waypoint_position: sentence.1,
         bearing_true: sentence.2,

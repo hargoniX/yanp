@@ -1,6 +1,6 @@
-use crate::sentences:: {GeneralSentence, SentenceType};
 use crate::errors::NmeaSentenceError;
 use crate::parsers;
+use crate::sentences::{GeneralSentence, SentenceType};
 
 macro_rules! status {
     ($($name:ident, $type:ty : [$($input:tt => $status:ident),+ error: $error:ident]),+) => {
@@ -10,13 +10,13 @@ macro_rules! status {
                 $error,
             )+
         }
-        $(  
+        $(
             #[derive(Debug, Clone, Copy, PartialEq)]
             pub enum $name {
                 $(
                     $status,
                 )+
-            } 
+            }
 
             impl $name {
                 #[allow(unused)]
@@ -437,7 +437,7 @@ pub struct VtgData {
     pub bearing_true: Option<f32>,
     pub bearing_magnetic: Option<f32>,
     pub speed_knots: Option<f32>,
-    pub speed_kmh: Option<f32>
+    pub speed_kmh: Option<f32>,
 }
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub struct VwrData {}
@@ -474,19 +474,18 @@ macro_rules! sentence_parse_generator {
     }
 }
 
-
-fn parse_result_to_data<'a, Data>(parse_result: Result<(&'a [u8], Data), nom::Err<(&'a [u8], nom::error::ErrorKind)>>) -> Result<Data, NmeaSentenceError<'a>> {
-    
+fn parse_result_to_data<'a, Data>(
+    parse_result: Result<(&'a [u8], Data), nom::Err<(&'a [u8], nom::error::ErrorKind)>>,
+) -> Result<Data, NmeaSentenceError<'a>> {
     match parse_result {
         Ok(value) => Ok(value.1),
-        Err(val) => {
-            Err(NmeaSentenceError::DataParsingError(val))
-        }
+        Err(val) => Err(NmeaSentenceError::DataParsingError(val)),
     }
 }
 
-pub (crate) fn parse_sentence_data<'a>(general_sentence: GeneralSentence<'a>) -> Result<SentenceData, NmeaSentenceError<'a>> {
-    
+pub(crate) fn parse_sentence_data<'a>(
+    general_sentence: GeneralSentence<'a>,
+) -> Result<SentenceData, NmeaSentenceError<'a>> {
     sentence_parse_generator!(
         general_sentence: [
             //AAM => parse_aam,

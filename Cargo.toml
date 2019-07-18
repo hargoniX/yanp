@@ -3,6 +3,13 @@ name = "yanp"
 version = "0.1.0"
 authors = ["Henrik Böving <hargonix@gmail.com>"]
 edition = "2018"
+description = "A no_std nmea sentence parser"
+documentation = "https://docs.rs/yanp"
+homepage = "https://github.com/hargoniX/yanp"
+readme = "README.md"
+keywords = ["coordinate", "gps", "position", "nmea", "no_std"]
+categories = ["no-std", "parsing"]
+license = "MIT"
 
 [features]
 default = []

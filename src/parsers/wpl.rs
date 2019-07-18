@@ -1,9 +1,11 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_wpl<'a>(sentence: (GpsPosition, Option<&'a [u8]>)) -> Result<WplData<'a>, NmeaSentenceError<'a>> {
-    Ok(WplData{
+fn build_wpl<'a>(
+    sentence: (GpsPosition, Option<&'a [u8]>),
+) -> Result<WplData<'a>, NmeaSentenceError<'a>> {
+    Ok(WplData {
         position: Some(sentence.0),
         waypoint_name: sentence.1,
     })

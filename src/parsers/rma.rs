@@ -1,8 +1,19 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_rma<'a>(sentence: (Option<char>, GpsPosition, Option<f32>, Option<f32>, Option<f32>, Option<f32>, Option<f32>, Option<char>)) -> Result<RmaData, NmeaSentenceError<'a>> {
+fn build_rma<'a>(
+    sentence: (
+        Option<char>,
+        GpsPosition,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<char>,
+    ),
+) -> Result<RmaData, NmeaSentenceError<'a>> {
     Ok(RmaData {
         status: translate_option!(sentence.0, RmStatus),
         position: sentence.1,
@@ -11,7 +22,7 @@ fn build_rma<'a>(sentence: (Option<char>, GpsPosition, Option<f32>, Option<f32>,
         speed: sentence.4,
         heading: sentence.5,
         magnetic_variation: sentence.6,
-        magnetic_direction: translate_option!(sentence.7, LongitudeDirection)
+        magnetic_direction: translate_option!(sentence.7, LongitudeDirection),
     })
 }
 

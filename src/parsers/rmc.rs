@@ -1,9 +1,20 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_rmc<'a>(sentence: (Option<GpsTime>, Option<char>, GpsPosition, Option<f32>, Option<f32>, Option<GpsDate>, Option<f32>, Option<char>)) -> Result<RmcData, NmeaSentenceError<'a>> {
-    Ok(RmcData{
+fn build_rmc<'a>(
+    sentence: (
+        Option<GpsTime>,
+        Option<char>,
+        GpsPosition,
+        Option<f32>,
+        Option<f32>,
+        Option<GpsDate>,
+        Option<f32>,
+        Option<char>,
+    ),
+) -> Result<RmcData, NmeaSentenceError<'a>> {
+    Ok(RmcData {
         time: sentence.0,
         status: translate_option!(sentence.1, RmStatus),
         position: sentence.2,
@@ -11,11 +22,11 @@ fn build_rmc<'a>(sentence: (Option<GpsTime>, Option<char>, GpsPosition, Option<f
         heading: sentence.4,
         date: sentence.5,
         magnetic_variation: sentence.6,
-        magnetic_direction: translate_option!(sentence.7, LongitudeDirection)
+        magnetic_direction: translate_option!(sentence.7, LongitudeDirection),
     })
 }
 
-named!(pub (crate) parse_rmc<RmcData>, 
+named!(pub (crate) parse_rmc<RmcData>,
     map_res!(
         do_parse!(
             time: opt!(complete!(parse_utc_stamp)) >>

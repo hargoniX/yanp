@@ -1,5 +1,5 @@
-use crate::sentences::SentenceType;
 use crate::parse::StatusParsingError;
+use crate::sentences::SentenceType;
 /// A list of errors that can occur during the creation of
 /// a GeneralSentence
 #[derive(Debug, Clone, PartialEq)]
@@ -25,5 +25,5 @@ pub enum NmeaSentenceError<'a> {
     DataParsingError(nom::Err<(&'a [u8], nom::error::ErrorKind)>),
     /// Is thrown if one of the status enums defined inside parse.rs is not able
     /// to be created based on the given input
-    StatusParsingError(StatusParsingError)
+    StatusParsingError(StatusParsingError),
 }

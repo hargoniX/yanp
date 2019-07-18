@@ -1,8 +1,21 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_rmb<'a>(sentence: (Option<char>, Option<f32>, Option<char>, Option<&'a [u8]>, Option<&'a [u8]>, GpsPosition, Option<f32>, Option<f32>, Option<f32>, Option<char>)) -> Result<RmbData<'a>, NmeaSentenceError<'a>> {
+fn build_rmb<'a>(
+    sentence: (
+        Option<char>,
+        Option<f32>,
+        Option<char>,
+        Option<&'a [u8]>,
+        Option<&'a [u8]>,
+        GpsPosition,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<char>,
+    ),
+) -> Result<RmbData<'a>, NmeaSentenceError<'a>> {
     Ok(RmbData {
         status: translate_option!(sentence.0, RmStatus),
         cross_error: sentence.1,

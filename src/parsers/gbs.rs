@@ -1,9 +1,19 @@
-use crate::parse::*;
 use super::utils::*;
 use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-
-fn build_gbs<'a>(sentence:(Option<GpsTime>, Option<f32>, Option<f32>, Option<f32>, Option<u8>, Option<f32>, Option<f32>, Option<f32>)) -> Result<GbsData, NmeaSentenceError<'a>> {
+fn build_gbs<'a>(
+    sentence: (
+        Option<GpsTime>,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+        Option<u8>,
+        Option<f32>,
+        Option<f32>,
+        Option<f32>,
+    ),
+) -> Result<GbsData, NmeaSentenceError<'a>> {
     Ok(GbsData {
         time: sentence.0,
         lat_error: sentence.1,

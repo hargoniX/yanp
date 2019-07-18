@@ -1,9 +1,21 @@
-use crate::parse::*;
-use crate::errors::NmeaSentenceError;
 use super::utils::*;
+use crate::errors::NmeaSentenceError;
+use crate::parse::*;
 
-fn build_gga<'a>(sentence: (Option<GpsTime>, GpsPosition, Option<u8>, Option<u8>, Option<f32>, Option<f32>, Option<&'a [u8]>, Option<f32>, Option<u16>)) -> Result<GgaData, NmeaSentenceError<'a>> {
-    Ok(GgaData{
+fn build_gga<'a>(
+    sentence: (
+        Option<GpsTime>,
+        GpsPosition,
+        Option<u8>,
+        Option<u8>,
+        Option<f32>,
+        Option<f32>,
+        Option<&'a [u8]>,
+        Option<f32>,
+        Option<u16>,
+    ),
+) -> Result<GgaData, NmeaSentenceError<'a>> {
+    Ok(GgaData {
         time: sentence.0,
         position: sentence.1,
         quality: translate_option!(sentence.2, GpsQuality),
