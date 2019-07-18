@@ -37,3 +37,5 @@ fn main(){
 }
 ```
 It is very important that the \r\n is included in the sentence as the library depends on this for a few slice operations as of now.
+
+As of now the GNS sentence requires the alloc feature to be selected.

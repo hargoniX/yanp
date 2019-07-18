@@ -10,4 +10,4 @@ alloc = []
 
 [dependencies.nom]
 version = "5.0.0"
-#default-features = false
+default-features = false
