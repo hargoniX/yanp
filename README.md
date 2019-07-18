@@ -23,7 +23,7 @@ A no_std Rust NMEA 0183 sentence parser.
 Put this in your Cargo.toml:
 ```toml
 #[dependencies]
-yanp = "0.1.0"
+yanp = "0.1.1"
 ```
 And in your code:
 ```rs
