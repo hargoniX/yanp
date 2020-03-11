@@ -1,5 +1,7 @@
-# YANP - Yet Another NMEA Parser
+# YANP - Yet Another NMEA Parser ![Crates.io](https://img.shields.io/crates/v/yanp?style=flat-square)
 A no_std Rust NMEA 0183 sentence parser.
+
+**[API Docs](https://docs.rs/yanp/0.1.1/yanp/)**
 
 ## Currently supported Sentences:
 * BOD
